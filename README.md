@@ -1,5 +1,7 @@
 # SafeSurf Llama: Your AI-Powered Web Safety Companion
 
+![Alt text](icon.png)
+
 SafeSurf Llama is a browser extension that leverages the power of large language models (LLMs) to enhance your online safety. It provides real-time analysis of web pages and links, helping you identify potential threats and make informed decisions about your online interactions.
 
 ## Features
