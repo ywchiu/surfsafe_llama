@@ -4,7 +4,7 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function getInspection(text, apiKey, apiUrl, systemPrompt) {
+async function getInspection(text, apiKey, apiUrl, modelName, systemPrompt) {
   console.log('Getting inspection for:', text.substring(0, 50) + '...');
   try {
     const response = await fetch(apiUrl, {
@@ -14,7 +14,7 @@ async function getInspection(text, apiKey, apiUrl, systemPrompt) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: modelName,
         messages: [
           {
             role: "system",
@@ -40,7 +40,7 @@ async function getInspection(text, apiKey, apiUrl, systemPrompt) {
   }
 }
 
-async function inspectElement(element, apiKey, apiUrl, systemPrompt) {
+async function inspectElement(element, apiKey, apiUrl, modelName, systemPrompt) {
   if (element.hasAttribute('data-inspected')) {
     console.log('Element already inspected:', element);
     return;
@@ -50,10 +50,17 @@ async function inspectElement(element, apiKey, apiUrl, systemPrompt) {
     const originalText = element.innerText.trim();
     if (originalText && originalText.length > 10) {
       console.log('Inspecting element:', element);
-      const inspectionResult = await getInspection(originalText, apiKey, apiUrl, systemPrompt);
+
+      const inspectionResult = await getInspection(originalText, apiKey, apiUrl, modelName, systemPrompt);
 
       const inspectionDiv = document.createElement('div');
-      inspectionDiv.textContent = inspectionResult;
+      
+      if (inspectionResult.toLowerCase().includes("nothing wrong")) {
+        inspectionDiv.innerHTML = '&#x2705; <span style="color: green;">Nothing wrong</span>';
+      } else {
+        inspectionDiv.innerHTML = '&#x274C; <span style="color: red;">' + inspectionResult + '</span>';
+      }
+      
       inspectionDiv.style.backgroundColor = '#f0f0f0';
       inspectionDiv.style.padding = '5px';
       inspectionDiv.style.margin = '5px 0';
@@ -73,7 +80,7 @@ async function inspectElement(element, apiKey, apiUrl, systemPrompt) {
 
 async function inspectAllText() {
   console.log('Starting inspection of all text');
-  const { apiKey, apiUrl, systemPrompt } = await chrome.storage.sync.get(['apiKey', 'apiUrl', 'systemPrompt']);
+  const { apiKey, apiUrl, modelName, systemPrompt } = await chrome.storage.sync.get(['apiKey', 'apiUrl', 'modelName', 'systemPrompt']);
   
   if (!apiKey || !apiUrl) {
     console.error('API key or URL not set');
@@ -83,32 +90,41 @@ async function inspectAllText() {
   const elementsToInspect = document.querySelectorAll('div[aria-describedby], p, h1, h2, h3');
 
   for (let element of elementsToInspect) {
-    await inspectElement(element, apiKey, apiUrl, systemPrompt);
+    await inspectElement(element, apiKey, apiUrl, modelName, systemPrompt);
   }
 }
 
 function enableClickInspect() {
   console.log('Click inspect enabled');
-  document.addEventListener('click', handleClickInspect);
+  document.addEventListener('click', handleClickInspect, true);
 }
 
 function disableClickInspect() {
   console.log('Click inspect disabled');
-  document.removeEventListener('click', handleClickInspect);
+  document.removeEventListener('click', handleClickInspect, true);
 }
 
 async function handleClickInspect(event) {
+  if (!clickInspectEnabled) return;
+  
   console.log('Click inspect triggered');
-  const { apiKey, apiUrl, systemPrompt } = await chrome.storage.sync.get(['apiKey', 'apiUrl', 'systemPrompt']);
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const { apiKey, apiUrl, modelName, systemPrompt } = await chrome.storage.sync.get(['apiKey', 'apiUrl', 'modelName', 'systemPrompt']);
   
   if (!apiKey || !apiUrl) {
     console.error('API key or URL not set');
     return;
   }
 
-  if (event.target.nodeType === Node.TEXT_NODE || event.target.childNodes.length === 0) {
-    const element = event.target.nodeType === Node.TEXT_NODE ? event.target.parentNode : event.target;
-    await inspectElement(element, apiKey, apiUrl, systemPrompt);
+  let element = event.target;
+  while (element && element.nodeType === Node.ELEMENT_NODE) {
+    if (element.innerText && element.innerText.trim().length > 10) {
+      await inspectElement(element, apiKey, apiUrl, modelName, systemPrompt);
+      break;
+    }
+    element = element.parentNode;
   }
 }
 
@@ -119,6 +135,7 @@ function handleMessage(request, sender, sendResponse) {
     sendResponse({status: 'Inspection started'});
   } else if (request.action === "toggleClickInspect") {
     clickInspectEnabled = request.value;
+    console.log('Toggle click inspect:', clickInspectEnabled);
     if (clickInspectEnabled) {
       enableClickInspect();
     } else {

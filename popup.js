@@ -6,20 +6,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const backToMainButton = document.getElementById('backToMain');
     const apiKeyInput = document.getElementById('apiKey');
     const apiUrlInput = document.getElementById('apiUrl');
-    const alwaysInspectCheckbox = document.getElementById('alwaysInspect');
+    const modelNameInput = document.getElementById('modelName');
     const clickInspectCheckbox = document.getElementById('clickInspect');
     const systemPromptTextarea = document.getElementById('systemPrompt');
     const mainPage = document.getElementById('mainPage');
     const systemPromptPage = document.getElementById('systemPromptPage');
 
-    console.log('DOM fully loaded and parsed');
+    console.log('Popup DOM fully loaded and parsed');
 
     // Load saved settings
-    chrome.storage.sync.get(['apiKey', 'apiUrl', 'alwaysInspect', 'clickInspect', 'systemPrompt'], function(result) {
+    chrome.storage.sync.get(['apiKey', 'apiUrl', 'modelName', 'clickInspect', 'systemPrompt'], function(result) {
         console.log('Loaded settings:', result);
         apiKeyInput.value = result.apiKey || '';
         apiUrlInput.value = result.apiUrl || '';
-        alwaysInspectCheckbox.checked = result.alwaysInspect || false;
+        modelNameInput.value = result.modelName || 'gpt-4o-mini';
         clickInspectCheckbox.checked = result.clickInspect || false;
         systemPromptTextarea.value = result.systemPrompt || '';
     });
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const settings = {
             apiKey: apiKeyInput.value,
             apiUrl: apiUrlInput.value,
-            alwaysInspect: alwaysInspectCheckbox.checked,
+            modelName: modelNameInput.value,
             clickInspect: clickInspectCheckbox.checked
         };
 
@@ -52,20 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle checkbox changes
-    alwaysInspectCheckbox.addEventListener('change', function() {
-        console.log('Always Inspect checkbox changed:', this.checked);
-        chrome.storage.sync.set({alwaysInspect: this.checked});
-        chrome.runtime.sendMessage({action: "updateAlwaysInspect", value: this.checked}, response => {
-            console.log('Response from updateAlwaysInspect:', response);
-        });
-    });
-
+    // Handle Click Inspect checkbox change
     clickInspectCheckbox.addEventListener('change', function() {
         console.log('Click Inspect checkbox changed:', this.checked);
         chrome.storage.sync.set({clickInspect: this.checked});
-        chrome.runtime.sendMessage({action: "updateClickInspect", value: this.checked}, response => {
-            console.log('Response from updateClickInspect:', response);
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {action: "toggleClickInspect", value: clickInspectCheckbox.checked}, response => {
+                console.log('Response from toggleClickInspect:', response);
+            });
         });
     });
 

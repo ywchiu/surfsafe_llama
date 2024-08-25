@@ -35,7 +35,7 @@
             border-radius: 4px;
         }
         .button {
-            background-color: #8A2BE2; /* Purple color */
+            background-color: #B24BF3;  /* Purple color */
             color: white;
             border: none;
             padding: 12px;
@@ -101,19 +101,7 @@
     <div id="mainPage">
         <div class="header">
             <img src="icon.jpg" alt="User">
-            <span>SafeSurf Llama</span>
-        </div>
-        <input type="password" id="apiKey" placeholder="Enter API Key">
-        <input type="text" id="apiUrl" placeholder="Enter API URL">
-        <button id="save" class="button">Save Settings</button>
-        <button id="startInspection" class="button">Start Inspection</button>
-        <button id="setSystemPrompt" class="button">Set System Prompt</button>
-        <div class="option">
-            <span>Always Inspecting page</span>
-            <label class="switch">
-                <input type="checkbox" id="alwaysInspect">
-                <span class="slider"></span>
-            </label>
+            <h1>SafeSurf Llama</h1>
         </div>
         <div class="option">
             <span>Click-through Inspection</span>
@@ -122,6 +110,13 @@
                 <span class="slider"></span>
             </label>
         </div>
+        <input type="password" id="apiKey" placeholder="Enter API Key">
+        <input type="text" id="apiUrl" placeholder="Enter API URL">
+        <input type="text" id="modelName" placeholder="Enter Model Name">
+        <button id="save" class="button">Save Settings</button>
+        <button id="setSystemPrompt" class="button">Set System Prompt</button>
+        <button id="startInspection" class="button" style="background-color:#8A2BE2;">Start Inspection</button>
+
     </div>
 
     <div id="systemPromptPage">

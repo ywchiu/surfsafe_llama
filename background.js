@@ -2,7 +2,7 @@ let settings = {};
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Extension installed');
-    chrome.storage.sync.get(['apiKey', 'apiUrl', 'alwaysInspect', 'clickInspect', 'systemPrompt'], (result) => {
+    chrome.storage.sync.get(['apiKey', 'apiUrl', 'clickInspect', 'systemPrompt'], (result) => {
         settings = result;
         console.log('Initial settings loaded:', settings);
     });
@@ -16,12 +16,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             console.log('Settings updated:', settings);
             sendResponse({status: 'Settings updated'});
         });
-    } else if (request.action === "updateAlwaysInspect") {
-        settings.alwaysInspect = request.value;
-        chrome.storage.sync.set({alwaysInspect: request.value}, () => {
-            console.log('Always Inspect updated:', request.value);
-            sendResponse({status: 'Always Inspect updated'});
-        });
     } else if (request.action === "updateClickInspect") {
         settings.clickInspect = request.value;
         chrome.storage.sync.set({clickInspect: request.value}, () => {
@@ -31,13 +25,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
     }
     return true;  // Indicates that the response is sent asynchronously
-});
-
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-    if (changeInfo.status === 'complete' && settings.alwaysInspect) {
-        console.log('Page loaded, starting inspection');
-        sendMessageToTab(tabId, {action: "startInspection"});
-    }
 });
 
 function sendMessageToActiveTab(message) {
