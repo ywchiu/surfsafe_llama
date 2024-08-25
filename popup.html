@@ -1,18 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Translator Settings</title>
-  <style>
-    body { width: 300px; padding: 10px; }
-    input, button { width: 100%; margin-bottom: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeSurf LLama</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .header img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            border-radius: 50%;
+            background-color: #ddd;
+        }
+        .header span {
+            font-size: 14px;
+            color: #666;
+        }
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button {
+            background-color: #8A2BE2; /* Purple color */
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #333;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 17px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 17px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 13px;
+            width: 13px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #8A2BE2; /* Purple color */
+        }
+        input:checked + .slider:before {
+            transform: translateX(13px);
+        }
+        #systemPromptPage {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <h2>Translator Settings</h2>
-  <input type="text" id="apiKey" placeholder="Enter API Key">
-  <input type="text" id="apiUrl" placeholder="Enter API URL">
-  <button id="save">Save</button>
-  <button id="translate">Translate Page</button>
-  <script src="popup.js"></script>
+    <div id="mainPage">
+        <div class="header">
+            <img src="icon.jpg" alt="User">
+            <span>SafeSurf Llama</span>
+        </div>
+        <input type="password" id="apiKey" placeholder="Enter API Key">
+        <input type="text" id="apiUrl" placeholder="Enter API URL">
+        <button id="save" class="button">Save Settings</button>
+        <button id="startInspection" class="button">Start Inspection</button>
+        <button id="setSystemPrompt" class="button">Set System Prompt</button>
+        <div class="option">
+            <span>Always Inspecting page</span>
+            <label class="switch">
+                <input type="checkbox" id="alwaysInspect">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="option">
+            <span>Click-through Inspection</span>
+            <label class="switch">
+                <input type="checkbox" id="clickInspect">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div id="systemPromptPage">
+        <div class="header">
+            <img src="icon.jpg" alt="User">
+            <span>Set System Prompt</span>
+        </div>
+        <textarea id="systemPrompt" rows="10" placeholder="Enter system prompt here"></textarea>
+        <button id="saveSystemPrompt" class="button">Save System Prompt</button>
+        <button id="backToMain" class="button">Back to Main</button>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

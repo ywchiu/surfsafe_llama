@@ -1,26 +1,95 @@
-document.getElementById('save').addEventListener('click', () => {
-  const apiKey = document.getElementById('apiKey').value;
-  const apiUrl = document.getElementById('apiUrl').value;
-  
-  chrome.storage.sync.set({ apiKey, apiUrl }, () => {
-    console.log('Settings saved');
-  });
-});
+document.addEventListener('DOMContentLoaded', function() {
+    const saveButton = document.getElementById('save');
+    const startInspectionButton = document.getElementById('startInspection');
+    const setSystemPromptButton = document.getElementById('setSystemPrompt');
+    const saveSystemPromptButton = document.getElementById('saveSystemPrompt');
+    const backToMainButton = document.getElementById('backToMain');
+    const apiKeyInput = document.getElementById('apiKey');
+    const apiUrlInput = document.getElementById('apiUrl');
+    const alwaysInspectCheckbox = document.getElementById('alwaysInspect');
+    const clickInspectCheckbox = document.getElementById('clickInspect');
+    const systemPromptTextarea = document.getElementById('systemPrompt');
+    const mainPage = document.getElementById('mainPage');
+    const systemPromptPage = document.getElementById('systemPromptPage');
 
-document.getElementById('translate').addEventListener('click', () => {
-  chrome.runtime.sendMessage({action: 'inject_and_translate'}, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError);
-    } else if (response && response.status === 'started') {
-      console.log('Translation started');
-    } else if (response && response.status === 'error') {
-      console.error('Translation error:', response.message);
-    }
-  });
-});
+    console.log('DOM fully loaded and parsed');
 
-// Load saved settings when popup opens
-chrome.storage.sync.get(['apiKey', 'apiUrl'], (result) => {
-  document.getElementById('apiKey').value = result.apiKey || '';
-  document.getElementById('apiUrl').value = result.apiUrl || '';
+    // Load saved settings
+    chrome.storage.sync.get(['apiKey', 'apiUrl', 'alwaysInspect', 'clickInspect', 'systemPrompt'], function(result) {
+        console.log('Loaded settings:', result);
+        apiKeyInput.value = result.apiKey || '';
+        apiUrlInput.value = result.apiUrl || '';
+        alwaysInspectCheckbox.checked = result.alwaysInspect || false;
+        clickInspectCheckbox.checked = result.clickInspect || false;
+        systemPromptTextarea.value = result.systemPrompt || '';
+    });
+
+    // Save settings
+    saveButton.addEventListener('click', function() {
+        console.log('Save button clicked');
+        const settings = {
+            apiKey: apiKeyInput.value,
+            apiUrl: apiUrlInput.value,
+            alwaysInspect: alwaysInspectCheckbox.checked,
+            clickInspect: clickInspectCheckbox.checked
+        };
+
+        chrome.storage.sync.set(settings, function() {
+            console.log('Settings saved:', settings);
+            chrome.runtime.sendMessage({action: "updateSettings", settings: settings}, response => {
+                console.log('Response from updateSettings:', response);
+            });
+        });
+    });
+
+    // Start Inspection
+    startInspectionButton.addEventListener('click', function() {
+        console.log('Start Inspection button clicked');
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {action: "startInspection"}, response => {
+                console.log('Response from startInspection:', response);
+            });
+        });
+    });
+
+    // Handle checkbox changes
+    alwaysInspectCheckbox.addEventListener('change', function() {
+        console.log('Always Inspect checkbox changed:', this.checked);
+        chrome.storage.sync.set({alwaysInspect: this.checked});
+        chrome.runtime.sendMessage({action: "updateAlwaysInspect", value: this.checked}, response => {
+            console.log('Response from updateAlwaysInspect:', response);
+        });
+    });
+
+    clickInspectCheckbox.addEventListener('change', function() {
+        console.log('Click Inspect checkbox changed:', this.checked);
+        chrome.storage.sync.set({clickInspect: this.checked});
+        chrome.runtime.sendMessage({action: "updateClickInspect", value: this.checked}, response => {
+            console.log('Response from updateClickInspect:', response);
+        });
+    });
+
+    // Show system prompt page
+    setSystemPromptButton.addEventListener('click', function() {
+        console.log('Set System Prompt button clicked');
+        mainPage.style.display = 'none';
+        systemPromptPage.style.display = 'block';
+    });
+
+    // Save system prompt and return to main page
+    saveSystemPromptButton.addEventListener('click', function() {
+        console.log('Save System Prompt button clicked');
+        chrome.storage.sync.set({systemPrompt: systemPromptTextarea.value}, function() {
+            console.log('System prompt saved:', systemPromptTextarea.value);
+            mainPage.style.display = 'block';
+            systemPromptPage.style.display = 'none';
+        });
+    });
+
+    // Return to main page without saving
+    backToMainButton.addEventListener('click', function() {
+        console.log('Back to Main button clicked');
+        mainPage.style.display = 'block';
+        systemPromptPage.style.display = 'none';
+    });
 });
